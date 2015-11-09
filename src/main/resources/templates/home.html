@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title th:text="${title}">DUMBudget</title>
+
+<link rel="stylesheet" th:href="@{/css/bootstrap.min.css}" href="../static/css/bootstrap.min.css" />
+<link rel="stylesheet" th:href="@{/css/app.css}" href="../static/css/app.css" />
+
+<script src="../static/js/react.js" th:src="@{/js/react.js}"></script>
+<script src="../static/js/react-dom.js" th:src="@{/js/react-dom.js}"></script>
+<script src="../static/js/jquery-2.1.4.min.js" th:src="@{/js/jquery-2.1.4.min.js}"></script>
+<script src="../static/js/signals.min.js" th:src="@{/js/signals.min.js}"></script>
+<script src="../static/js/crossroads.min.js" th:src="@{/js/crossroads.min.js}"></script>
+<script src="../static/js/hasher.min.js" th:src="@{/js/hasher.min.js}"></script>
+
+<script type="text/javascript">
+	var budgetData = {
+		timeDesc : "Jan 2015",
+		carryOver : {budget:"101.00", actual:"102.00", prevBudget:"103.00", prevActual:"104.00"},
+		income : {budget:"201.00", actual:"202.00", prevBudget:"203.00", prevActual:"204.00"},
+		totalExpenses : {budget:"401.00", actual:"402.00", prevBudget:"403.00", prevActual:"404.00"},
+		balance : {budget:"501.00", actual:"502.00", prevBudget:"503.00", prevActual:"504.00"},
+		expenses : [
+			{
+				group : "Charity",
+				categories : [
+					{name:"Tithes", budget:"301.00", actual:"302.00", prevBudget:"303.00", prevActual:"304.00"},
+					{name:"Charity & Other Offerings", budget:"301.00", actual:"302.00", prevBudget:"303.00", prevActual:"304.00"}
+			]},
+			{
+				group : "Savings",
+				categories : [
+					{name:"Emergency Fund", budget:"301.00", actual:"302.00", prevBudget:"303.00", prevActual:"304.00"},
+					{name:"Retirement", budget:"301.00", actual:"302.00", prevBudget:"303.00", prevActual:"304.00"}
+			]}
+		]
+	}
+
+	$(function() {
+		$('[data-toggle="tooltip"]').tooltip()
+		hideAllScreens();
+
+		//setup crossroads
+		crossroads.addRoute('home');
+		crossroads.addRoute('budget');
+		crossroads.addRoute('transactions');
+		crossroads.routed.add(console.log, console); //log all routes
+		crossroads.routed.add(function(request, data) {
+			console.log(request);
+			console.log(data.route + ' - ' + data.params + ' - ' + data.isFirst);
+			showScreen(request);
+		});
+
+		//setup hasher
+		hasher.initialized.add(parseHash); //parse initial hash
+		hasher.changed.add(parseHash); //parse hash changes
+		hasher.init(); //start listening for history change
+	})
+
+	function parseHash(newHash, oldHash) {
+		crossroads.parse(newHash);
+	}
+
+	function showScreen(screen) {
+		hideAllScreens();
+		$('#screen-' + screen).show();
+		budgetScreen();
+	}
+
+	function hideAllScreens() {
+		$('div[role="screen"]').hide();
+		$('.navbar-collapse').collapse('hide');
+	}
+
+	function budgetScreen() {
+		var PageHeader = React.createClass({
+			render : function() {
+				return React.createElement("h1", null, this.props.title + ' ',
+								React.createElement("small", null, this.props.timeDesc));
+			}
+		});
+		
+		var BudgetDataRow = React.createClass({
+			displayName : "BudgetDataRow",
+			render : function() {
+				return React.createElement("div", {className:"row highlight-row"},
+					React.createElement("div", {className:"col-sm-4"},
+						React.createElement(this.props.labelElt, null, this.props.label)),
+					React.createElement("div", {className:"col-sm-2 col-xs-6 text-right"},
+						React.createElement("input", {type:"text", className:"form-control text-right", defaultValue:this.props.amounts.budget})),
+					React.createElement("div", {className:"col-sm-2 col-xs-6 text-right"}, this.props.amounts.actual),
+					React.createElement("div", {className:"col-sm-2 text-right hidden-xs"}, this.props.amounts.prevBudget),
+					React.createElement("div", {className:"col-sm-2 text-right hidden-xs"}, this.props.amounts.prevActual)
+				);
+			}
+		});
+		
+		var BudgetTotalRow = React.createClass({
+			displayName : "BudgetTotalRow",
+			render : function() {
+				return React.createElement("div", {className:"row highlight-row"},
+					React.createElement("div", {className:"col-sm-4"},
+						React.createElement(this.props.labelElt, null, this.props.label)),
+					React.createElement("div", {className:"col-sm-2 col-xs-6 text-right margin-top-20"}, this.props.amounts.budget),
+					React.createElement("div", {className:"col-sm-2 col-xs-6 text-right margin-top-20"}, this.props.amounts.actual),
+					React.createElement("div", {className:"col-sm-2 text-right hidden-xs margin-top-20"}, this.props.amounts.prevBudget),
+					React.createElement("div", {className:"col-sm-2 text-right hidden-xs margin-top-20"}, this.props.amounts.prevActual)
+				);
+			}
+		});
+		var BudgetExpenses = React.createClass({
+			displayName : "BudgetExpenses",
+			render : function() {
+				var cats = $.map(budgetData.expenses, function(e) {
+					var rows = $.map(e.categories, function(c) {
+						return React.createElement(BudgetDataRow, {
+							labelElt : "div",
+							label : c.name,
+							amounts : c,
+						})
+					});
+
+					return React.createElement("div", null, 
+							React.createElement("h4", {className:"col-xs-12"}, 
+								React.createElement("span", {className:"label label-default col-sm-3 col-xs-6"}, e.group)),
+							rows);
+				});
+
+				return React.createElement("div", null, cats);
+			}
+		});
+
+		var pageHeader = $('#screen-budget #page-header').get(0);
+		ReactDOM.render(React.createElement(PageHeader, {
+			title : "Budget",
+			timeDesc : budgetData.timeDesc
+		}), pageHeader);
+		
+		ReactDOM.render(React.createElement(BudgetDataRow, {
+			labelElt : "h4",
+			label : "Carry Over / Prior Month",
+			amounts : budgetData.carryOver
+		}), $('#budget-carry-over').get(0));
+		
+		ReactDOM.render(React.createElement(BudgetDataRow, {
+			labelElt : "h4",
+			label : "Income",
+			amounts : budgetData.income
+		}), $('#budget-income').get(0));
+
+		ReactDOM.render(React.createElement(BudgetExpenses),
+				$('#budget-expenses').get(0));
+
+		ReactDOM.render(React.createElement(BudgetTotalRow, {
+			labelElt : "h3",
+			label : "Total Expenses",
+			amounts : budgetData.totalExpenses
+		}), $('#budget-total-expenses').get(0));
+		
+		ReactDOM.render(React.createElement(BudgetTotalRow, {
+			labelElt : "h3",
+			label : "Balance",
+			amounts : budgetData.balance
+		}), $('#budget-total-balance').get(0));
+	}
+</script>
+</head>
+<body>
+	<div class="container">
+		<nav class="navbar navbar-default navbar-static-top navbar-inverse">
+			<div class="container-fluid">
+				<div class="navbar-header">
+					<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
+						aria-expanded="false" aria-controls="navbar">
+						<span class="sr-only">Toggle navigation</span> <span class="icon-bar"></span> <span class="icon-bar"></span> <span
+							class="icon-bar"></span>
+					</button>
+					<a class="navbar-brand" href="#home">DUMBudget</a>
+				</div>
+				<div id="navbar" class="navbar-collapse collapse">
+					<ul class="nav navbar-nav">
+						<li><a href="#budget">Budget</a></li>
+						<li><a href="#transactions">Transactions</a></li>
+						<li><a href="#debt">Debt</a></li>
+						<li><a href="#sinking_funds">Sinking Funds</a></li>
+					</ul>
+					<ul class="nav navbar-nav navbar-right">
+						<li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+							aria-haspopup="true" aria-expanded="false">Options<span class="caret"></span></a>
+							<ul class="dropdown-menu">
+								<li><a href="#accounts">Manage Accounts</a></li>
+								<li><a href="#categories">Manage Categories</a></li>
+								<li><a href="#budget_settings">Budget Settings</a></li>
+								<li role="separator" class="divider"></li>
+								<li class="dropdown-header">[[User Name]]</li>
+								<li><a href="#settings">Account Settings</a></li>
+								<li><a href="#logout">Logout</a></li>
+							</ul></li>
+					</ul>
+				</div>
+				<!--/.nav-collapse -->
+			</div>
+			<!--/.container-fluid -->
+		</nav>
+
+		<div id="screen-home" role="screen">
+			<div class="page-header">
+				<h1>Home</h1>
+			</div>
+			<div>Welcome to Don't Understand My Budget</div>
+			<!-- /id=home -->
+		</div>
+
+		<div id="screen-budget" role="screen">
+			<div class="page-header" id="page-header">
+				<h1>
+					Budget <small>Jan 1, 2015 - Jan 31, 2015</small>
+				</h1>
+			</div>
+			<div class="row">
+				<div class="dropdown col-sm-3 col-xs-6">
+					<button class="btn btn-default dropdown-toggle" type="button" id="budget-select" data-toggle="dropdown"
+						aria-haspopup="true" aria-expanded="true">
+						Select Budget <span class="caret"></span>
+					</button>
+					<ul class="dropdown-menu" aria-labelledby="budget-select">
+						<li><a>Jan 2015</a></li>
+						<li><a>Dec 2014</a></li>
+						<li><a>Nov 2014</a></li>
+					</ul>
+				</div>
+				<div class="dropdown col-sm-3 col-xs-6 text-right">
+					<button class="btn btn-default dropdown-toggle" type="button" id="budget-action-select" data-toggle="dropdown"
+						aria-haspopup="true" aria-expanded="true">
+						Action <span class="caret"></span>
+					</button>
+					<ul class="dropdown-menu" aria-labelledby="budget-select">
+						<li><a>Cash Withdrawl...</a></li>
+						<li><a>Record Sinking Funds</a></li>
+					</ul>
+				</div>
+				<div class="col-sm-6 col-xs-12 text-right">Balance: $100.00</div>
+			</div>
+
+			<form>
+				<div class="row hidden-xs">
+					<div class="col-sm-4"></div>
+					<div class="col-sm-4 text-center">
+						<h3>
+							<span class="label label-default">This Month</span>
+						</h3>
+					</div>
+					<div class="col-sm-4 text-center">
+						<h3>
+							<span class="label label-default">Prior Month</span>
+						</h3>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-sm-4 hidden-xs"></div>
+					<div class="col-sm-2 col-xs-6 text-center">
+						<h4>Budget</h4>
+					</div>
+					<div class="col-sm-2 col-xs-6 text-center">
+						<h4>Actual</h4>
+					</div>
+					<div class="col-sm-2 text-center hidden-xs">
+						<h4>Budget</h4>
+					</div>
+					<div class="col-sm-2 text-center hidden-xs">
+						<h4>Actual</h4>
+					</div>
+				</div>
+				<div id="budget-carry-over"></div>
+				<div id="budget-income"></div>
+				<div class="row">
+					<div class="col-xs-12">
+						<h3>Expenses</h3>
+					</div>
+				</div>
+				<div id="budget-expenses"></div>
+				<div id="budget-total-expenses"></div>
+				<div id="budget-total-balance"></div>
+			</form>
+			<!-- /id=budget -->
+		</div>
+
+		<!-- Transactions Screen -->
+		<div id="screen-transactions" role="screen">
+			<div class="page-header">
+				<h1>
+					Transactions <small>All Accounts</small>
+				</h1>
+			</div>
+			<div class="row">
+				<div class="dropdown col-sm-2">
+					<button class="btn btn-default dropdown-toggle" type="button" id="transactions-account-select"
+						data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+						Select Account <span class="caret"></span>
+					</button>
+					<ul class="dropdown-menu" aria-labelledby="transactions-account-select">
+						<li><a>Checking Account</a></li>
+						<li><a>Savings Account</a></li>
+						<li><a>Credit Card 1</a></li>
+					</ul>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-sm-1 col-xs-2">
+					<h4>Date</h4>
+				</div>
+				<div class="col-sm-2 col-xs-4">
+					<h4>Account</h4>
+				</div>
+				<div class="col-sm-1 col-xs-2">
+					<h4>Type</h4>
+				</div>
+				<div class="col-sm-1 col-xs-2">
+					<h4>Amount</h4>
+				</div>
+				<div class="col-sm-1 col-xs-3" data-toggle="tooltip" data-placement="left"
+					title="Reconciled Flag - Check the box to mark as reconciled">
+					<h4>Rec</h4>
+				</div>
+				<div class="col-sm-6 hidden-xs">
+					<h4>Description</h4>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-sm-1 col-xs-2">2/1/2015</div>
+				<div class="col-sm-2 col-xs-4">Checking</div>
+				<div class="col-sm-1 col-xs-2">Withdrawl</div>
+				<div class="col-sm-1 col-xs-3">$1424.00</div>
+				<div class="col-sm-1 col-xs-1">
+					<input type="checkbox" checked="checked" />
+				</div>
+				<div class="hidden-sm col-xs-1"></div>
+				<div class="col-sm-6 col-xs-11">Cash withdrawl for budget</div>
+			</div>
+			<div class="row">
+				<div class="col-sm-1 col-xs-2">1/31/2015</div>
+				<div class="col-sm-2 col-xs-4">Checking</div>
+				<div class="col-sm-1 col-xs-2">Check</div>
+				<div class="col-sm-1 col-xs-3">$100.00</div>
+				<div class="col-sm-1 col-xs-1">
+					<input type="checkbox" checked="checked" />
+				</div>
+				<div class="hidden-sm col-xs-1"></div>
+				<div class="col-sm-6 col-xs-11">Church - Check #444 (budget breakdown...)</div>
+			</div>
+			<!-- /id=transactions -->
+		</div>
+		<!-- /container -->
+	</div>
+
+
+
+	<!-- Include all compiled plugins (below), or include individual files as needed -->
+	<script src="../static/js/bootstrap.min.js" th:src="@{/js/bootstrap.min.js}"></script>
+</body>
+</html>

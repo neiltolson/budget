@@ -62,8 +62,8 @@
 			<column name="beginningBlance" type="decimal(11,2)" />
 		</createTable>
 
-		<createTable tableName="transaction">
-			<column name="transactionId" type="int" autoIncrement="true"
+		<createTable tableName="accountTransaction">
+			<column name="accountTransactionId" type="int" autoIncrement="true"
 				startWith="100">
 				<constraints primaryKey="true" primaryKeyName="pk_transactionId"
 					nullable="false" />
