@@ -8,7 +8,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
 @Entity
-public class BugetLineItem {
+public class BudgetLineItem {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Integer budgetLineItemId;

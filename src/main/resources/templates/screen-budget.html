@@ -1,0 +1,74 @@
+		<div id="screen-budget" role="screen">
+			<div class="page-header" id="page-header">
+				<h1>
+					Budget <small>Jan 1, 2015 - Jan 31, 2015</small>
+				</h1>
+			</div>
+			<div class="row">
+				<div class="dropdown col-sm-3 col-xs-6">
+					<button class="btn btn-default dropdown-toggle" type="button" id="budget-select" data-toggle="dropdown"
+						aria-haspopup="true" aria-expanded="true">
+						Select Budget <span class="caret"></span>
+					</button>
+					<ul class="dropdown-menu" aria-labelledby="budget-select">
+						<li><a>Jan 2015</a></li>
+						<li><a>Dec 2014</a></li>
+						<li><a>Nov 2014</a></li>
+					</ul>
+				</div>
+				<div class="dropdown col-sm-3 col-xs-6 text-right">
+					<button class="btn btn-default dropdown-toggle" type="button" id="budget-action-select" data-toggle="dropdown"
+						aria-haspopup="true" aria-expanded="true">
+						Action <span class="caret"></span>
+					</button>
+					<ul class="dropdown-menu" aria-labelledby="budget-select">
+						<li><a>Cash Withdrawl...</a></li>
+						<li><a>Record Sinking Funds</a></li>
+					</ul>
+				</div>
+				<div class="col-sm-6 col-xs-12 text-right">Balance: $100.00</div>
+			</div>
+
+			<form>
+				<div class="row hidden-xs">
+					<div class="col-sm-4"></div>
+					<div class="col-sm-4 text-center">
+						<h3>
+							<span class="label label-default">This Month</span>
+						</h3>
+					</div>
+					<div class="col-sm-4 text-center">
+						<h3>
+							<span class="label label-default">Prior Month</span>
+						</h3>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-sm-4 hidden-xs"></div>
+					<div class="col-sm-2 col-xs-6 text-center">
+						<h4>Budget</h4>
+					</div>
+					<div class="col-sm-2 col-xs-6 text-center">
+						<h4>Actual</h4>
+					</div>
+					<div class="col-sm-2 text-center hidden-xs">
+						<h4>Budget</h4>
+					</div>
+					<div class="col-sm-2 text-center hidden-xs">
+						<h4>Actual</h4>
+					</div>
+				</div>
+				<div id="budget-carry-over"></div>
+				<div id="budget-income"></div>
+				<div class="row">
+					<div class="col-xs-12">
+						<h3>Expenses</h3>
+					</div>
+				</div>
+				<div id="budget-expenses"></div>
+				<div id="budget-total-expenses"></div>
+				<div id="budget-total-balance"></div>
+			</form>
+			<!-- /id=budget -->
+		</div>
+
